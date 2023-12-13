@@ -13,8 +13,9 @@ import {
 } from "@mui/material";
 import { Select, SelectChangeEvent } from "@mui/material";
 import CSVReaderWrapper from "./CSVReaderWrapper";
-import { Employee, Depts, Sites } from "./interface";
+import { Employee, Depts, Sites, FormData } from "./interface";
 import { mapCSVToEmployee, mapCSVToDepts, mapCSVToSites } from "./logics";
+import { submitFormData } from './apiCalls'; 
 
 const Form = () => {
   const [email, setEmail] = React.useState<string>("");
@@ -120,30 +121,38 @@ const Form = () => {
     }
 
     if (valid) {
-      console.log("Email:", email);
-      console.log("Selected File:", selectedFileName);
-
-      switch (selectedFileName) {
-        case "employees.csv":
-          console.log("Employees Data:", employData);
-          break;
-        case "depts.csv":
-          console.log("Depts Data:", deptsData);
-          break;
-        case "sites.csv":
-          console.log("Sites Data:", sitesData);
-          break;
-        default:
-          break; 
-      }
-
       
+      try{
+        const formData:FormData = {
+          email,
+          fileName: selectedFileName,
+          fileData: []
+        };
+        switch (selectedFileName) {
+          case "employees.csv":
+            formData.fileData = employData;
+            break;
+          case "depts.csv":
+            formData.fileData = deptsData;
+            break;
+          case "sites.csv":
+            formData.fileData = sitesData;
+            break;
+          default:
+            break; 
+        }
 
-      setEmail("");
-      setSelectedFileName("");
-      setEmployData([]);
-      setDeptsData([]);
-      setSitesData([]);
+        const res = await submitFormData(formData);
+        console.log(res); 
+        setEmail("");
+        setSelectedFileName("");
+        setEmployData([]);
+        setDeptsData([]);
+        setSitesData([]);
+      }
+      catch(error){
+        console.error('Error submitting Data : ',error);
+      }
     }
   };
 

@@ -16,3 +16,8 @@ export interface Employee {
     sitename: string;
     siteno: string;
   }
+  export interface FormData {
+    email: string;
+    fileName: string;
+    fileData: Employee[] | Depts[] | Sites[];
+  }
