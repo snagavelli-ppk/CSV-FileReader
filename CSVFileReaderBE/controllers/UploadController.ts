@@ -5,11 +5,10 @@ export const uploadData = async (req: Request, res: Response): Promise<void> => 
   try {
     const formData = req.body;
 
-     const job = await createJob(formData.email, formData.fileName,);
+    const job = await createJob(formData.email, formData.fileName,);
 
-    await saveData(formData);
-
-    res.json({ success: true});
+    const data=await saveData(formData);
+    res.json(data);
   } catch (error) {
     console.error('Error uploading data:', error);
     res.status(500).json({ error: 'Internal Server Error' });
