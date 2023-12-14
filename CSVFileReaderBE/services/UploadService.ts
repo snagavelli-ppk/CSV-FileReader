@@ -36,9 +36,21 @@ export const saveData = async (
   formData: FormData
 ): Promise<SaveDataResponse> => {
   try {
-    const existingDeptData = await DeptModel.find({});
-    const existingSiteData = await SiteModel.find({});
-    const existingEmployData = await EmployModel.find({});
+    const existingDeptData: Record<string, Dept> = {};
+    const existingSiteData: Record<string, Site> = {};
+    const existingEmployData: Record<string, Employ> = {};
+
+    (await DeptModel.find({})).forEach((dept) => {
+      existingDeptData[dept.deptno] = dept;
+    });
+
+    (await SiteModel.find({})).forEach((site) => {
+      existingSiteData[site.siteno] = site;
+    });
+
+    (await EmployModel.find({})).forEach((employ) => {
+      existingEmployData[employ.id] = employ;
+    });
 
     const deptsToInsert: Dept[] = [];
     const sitesToInsert: Site[] = [];
@@ -47,63 +59,30 @@ export const saveData = async (
 
     for (const record of formData.fileData) {
       if ("deptname" in record && "deptno" in record) {
-        const deptExists = existingDeptData.find(
-          (dept) =>
-            dept.deptname === record.deptname && dept.deptno === record.deptno
-        );
-
-        if (!deptExists) {
-          const insertedDept = await DeptModel.insertMany([
-            {
-              deptname: record.deptname,
-              deptno: record.deptno,
-            },
-          ]);
+        if (!existingDeptData[record.deptno]) {
+          deptsToInsert.push(record);
           insertedData.push({
-            id: insertedDept[0]._id.toString(),
+            id: record.deptno,
             record: record,
           });
         }
       }
 
       if ("sitename" in record && "siteno" in record) {
-        const siteExists = existingSiteData.find(
-          (site) =>
-            site.sitename === record.sitename && site.siteno === record.siteno
-        );
-
-        if (!siteExists) {
-          const insertedSite = await SiteModel.insertMany([
-            {
-              sitename: record.sitename,
-              siteno: record.siteno,
-            },
-          ]);
+        if (!existingSiteData[record.siteno]) {
+          sitesToInsert.push(record);
           insertedData.push({
-            id: insertedSite[0]._id.toString(),
+            id: record.siteno,
             record: record,
           });
         }
       }
 
       if ("id" in record) {
-        const employExists = existingEmployData.find(
-          (employ) => employ.id === record.id
-        );
-
-        if (!employExists) {
-          const insertedEmploy = await EmployModel.insertMany([
-            {
-              id: record.id,
-              name: record.name,
-              deptname: record.deptname,
-              deptno: record.deptno,
-              sitename: record.sitename,
-              siteno: record.siteno,
-            },
-          ]);
+        if (!existingEmployData[record.id]) {
+          employsToInsert.push(record);
           insertedData.push({
-            id: insertedEmploy[0]._id.toString(),
+            id: record.id,
             record: record,
           });
         }
@@ -111,15 +90,15 @@ export const saveData = async (
     }
 
     if (deptsToInsert.length > 0) {
-      await DeptModel.insertMany(deptsToInsert);
+      await DeptModel.create(deptsToInsert);
     }
 
     if (sitesToInsert.length > 0) {
-      await SiteModel.insertMany(sitesToInsert);
+      await SiteModel.create(sitesToInsert);
     }
 
     if (employsToInsert.length > 0) {
-      await EmployModel.insertMany(employsToInsert);
+      await EmployModel.create(employsToInsert);
     }
 
     await JobModel.updateOne(
